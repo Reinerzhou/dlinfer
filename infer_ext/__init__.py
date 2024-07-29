@@ -7,3 +7,5 @@ vendor.load_extension_ops()
 # pytorch_patch.apply_tensor_method_patch()
 # pytorch_patch.apply_torch_function_patch()
 # pytorch_patch.apply_dist_patch()
+
+from infer_ext import ops
