@@ -23,7 +23,8 @@ def vendor_torch_init():
     global device_type, vendor_is_initialized, apply_vendor_pytorch_patch
     vendor_is_initialized = True
     device_type = torch.device(0).type
-    apply_vendor_pytorch_patch = vendor_module.apply_vendor_pytorch_patch
+    if hasattr(vendor_module, "apply_vendor_pytorch_patch"):
+        apply_vendor_pytorch_patch = vendor_module.apply_vendor_pytorch_patch
 
 @lru_cache(1)
 def get_device_str():
@@ -42,6 +43,6 @@ def get_comm_str():
 def load_extension_ops():
     if not vendor_is_initialized:
         vendor_torch_init()
-    extension_file_path = f"{str(Path(__file__).parent / vendor_name / vendor_name)}_extension.so"
-    if Path(extension_file_path).exists():
-        torch.ops.load_library(extension_file_path)
+    vendor_module = import_vendor_module(vendor_name)
+    if hasattr(vendor_name, "load_ops"):
+        vendor_module.load_ops()

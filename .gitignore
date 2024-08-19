@@ -128,3 +128,6 @@ mmlab_pack
 
 # generated config
 /infer_ext/vendor/vendor.yaml
+
+# external repo
+/infer_ext_maca_ops

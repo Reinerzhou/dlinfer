@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 project(ascend_extension)
 
+find_package(Torch REQUIRED)
 find_package(Torch_npu REQUIRED)
 find_package(Hccl REQUIRED)
 

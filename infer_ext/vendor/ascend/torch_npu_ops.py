@@ -53,16 +53,16 @@ def context_attention(
     num_q_heads: int,
     num_kv_heads: int,
     attn_mask: Sequence[Optional[Tensor]],
-    attn_qk_scale: Optional[float],
+    softmax_scale: Optional[float],
     alibi_slopes: Optional[Sequence[float]],
     attn_output: Optional[Tensor],
 ) -> Tensor:
     if alibi_slopes is not None:
         raise RuntimeError("paged_decode_attention does not "
                            "support alibi_slopes yet")
-    if attn_qk_scale is not None:
+    if softmax_scale is not None:
         raise RuntimeError("paged_decode_attention does not "
-                           "support attn_qk_scale yet")
+                           "support softmax_scale yet")
     # cann prompt_fa don't support batch query with different seq_len
     seq_len_list = seq_len.tolist()
     if attn_mask:
@@ -117,16 +117,16 @@ def paged_decode_attention(
     kv_seq_len: Tensor,
     num_q_heads: int,
     num_kv_heads: int,
-    attn_qk_scale: Optional[float],
+    softmax_scale: Optional[float],
     alibi_slopes: Optional[Sequence[float]],
     attn_output: Optional[Tensor],
 ) -> Tensor:
     if alibi_slopes is not None:
         raise RuntimeError("paged_decode_attention does not "
                            "support alibi_slopes yet")
-    if attn_qk_scale is not None:
+    if softmax_scale is not None:
         raise RuntimeError("paged_decode_attention does not "
-                           "support attn_qk_scale yet")
+                           "support softmax_scale yet")
     if isinstance(block_table, torch.Tensor) and block_table.dtype != torch.int32:
         block_table = block_table.to(torch.int32)
 
@@ -159,16 +159,16 @@ def paged_prefill_attention(
     num_q_heads: int,
     num_kv_heads: int,
     attn_mask: Sequence[Optional[Tensor]],
-    attn_qk_scale: Optional[float],
+    softmax_scale: Optional[float],
     alibi_slopes: Optional[Sequence[float]],
     attn_output: Optional[Tensor],
 ) -> Tensor:
     if alibi_slopes is not None:
         raise RuntimeError("paged_decode_attention does not "
                            "support alibi_slopes yet")
-    if attn_qk_scale is not None:
+    if softmax_scale is not None:
         raise RuntimeError("paged_decode_attention does not "
-                           "support attn_qk_scale yet")
+                           "support softmax_scale yet")
     if block_table.dtype != torch.int32:
         block_table = block_table.to(torch.int32)
 

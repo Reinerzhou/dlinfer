@@ -11,17 +11,19 @@ VERSION = "0.0.1"
 
 vendor_dispatch_key_map = {
     "ascend": "PrivateUse1",
+    "maca": "CUDA",
 }
 
 vendor_torch_map = {
     "ascend": "torch_npu",
+    "maca": "torch",
 }
 
 def gen_vendor_yaml(device):
     config = dict()
-    config['vendor'] = device
+    config["vendor"] = device
     assert device in vendor_dispatch_key_map
-    config['dispatch_key'] = vendor_dispatch_key_map[device]
+    config["dispatch_key"] = vendor_dispatch_key_map[device]
     file_path = Path(__file__).parent / "infer_ext" / "vendor" / "vendor.yaml"
     with open(str(file_path), "w") as f:
         yaml.safe_dump(config, f)
@@ -47,11 +49,12 @@ def get_cmake_args():
     cmake_args = list()
     cmake_device = get_device()
     cmake_args.append("-DCMAKE_BUILD_TYPE=Release")
-    cmake_args.append(f"-DTorch_DIR={get_torch_cmake_prefix_path()}/Torch")
+    cmake_args.append(f"-DCMAKE_PREFIX_PATH={get_torch_cmake_prefix_path()}/Torch")
     cmake_args.append(f"-D_GLIBCXX_USE_CXX11_ABI={get_torch_cxx11_abi()}")
     cmake_args.append(f"-DDEVICE={cmake_device}")
     vendor_torch_str, vendor_torch_root = get_vendor_torch_root(cmake_device)
-    cmake_args.append(f"-D{vendor_torch_str.capitalize()}_ROOT={vendor_torch_root}")
+    if vendor_torch_str != "torch":
+        cmake_args.append(f"-D{vendor_torch_str.capitalize()}_ROOT={vendor_torch_root}")
     return cmake_args
 
 def get_package_data():
@@ -59,7 +62,7 @@ def get_package_data():
     yaml_file_name = gen_vendor_yaml(cmake_device)
     assert cmake_device, "DEVICE shouldn't be empty!"
     return {
-        f"infer_ext.vendor": [
+        "infer_ext.vendor": [
             yaml_file_name,
         ]
     }
@@ -79,14 +82,14 @@ def main():
             "Programming Language :: Python :: 3.8",
             "Programming Language :: Python :: 3.9",
             "Programming Language :: Python :: 3.10",
-            "Operating System :: POSIX :: Linux"
+            "Operating System :: POSIX :: Linux",
         ],
         python_requires=">=3.8",
         install_requires=[
             "torch >= 2.0.0",
-        ]
+        ],
     )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
