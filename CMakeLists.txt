@@ -17,7 +17,9 @@ set(_GLIBCXX_USE_CXX11_ABI "0" CACHE STRING "")
 set(DEVICE "" CACHE STRING "device string, default empty string")
 string(TOLOWER "${DEVICE}" DEVICE)
 
+list(APPEND SUPPORTED_DEVICE "maca")
 list(APPEND SUPPORTED_DEVICE "ascend")
+
 
 if(NOT DEVICE)
   message(FATAL_ERROR "Please specify variable DEVICE of infer_ext!")
@@ -25,6 +27,6 @@ elseif(NOT DEVICE IN_LIST SUPPORTED_DEVICE)
   message(FATAL_ERROR "Device ${DEVICE} is not supported! Supported devices: ${SUPPORTED_DEVICE}")
 endif()
 
-find_package(Torch REQUIRED)
+# find_package(Torch REQUIRED)
 
-add_subdirectory(infer_ext/vendor/${DEVICE})
+# add_subdirectory(infer_ext/vendor/${DEVICE})

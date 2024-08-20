@@ -22,8 +22,8 @@ def vendor_torch_init():
     vendor_module = import_vendor_module(vendor_name)
     global device_type, vendor_is_initialized, apply_vendor_pytorch_patch
     vendor_is_initialized = True
-    device_type = torch.device(0).type
-    apply_vendor_pytorch_patch = vendor_module.apply_vendor_pytorch_patch
+    # device_type = torch.device(0).type
+    # apply_vendor_pytorch_patch = vendor_module.apply_vendor_pytorch_patch
 
 @lru_cache(1)
 def get_device_str():

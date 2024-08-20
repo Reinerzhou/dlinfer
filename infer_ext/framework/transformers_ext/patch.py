@@ -13,3 +13,6 @@ def apply_model_patches(module):
         vit_module = inspect.getmodule(module.InternVisionModel)
         vit_module.InternAttention._naive_attn = internvl.InternAttention_naive_attn
         vit_module.InternRMSNorm.forward = internvl.InternRMSNorm_forward
+    elif module.__name__ == 'transformers_modules.cogvlm2-llama3-chinese-chat-19b.modeling_cogvlm':
+        from . import cogvlm
+        module.EVA2CLIPModel = cogvlm.EVA2CLIPModel
