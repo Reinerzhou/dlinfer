@@ -68,4 +68,14 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
             &topk_softmax,
             "topk_softmax(Tensor! topk_weights, Tensor! topk_indices, Tensor! "
             "token_expert_indices, Tensor gating_output) -> ()");
+
+    // Cache ops
+    ops.def("reshape_and_cache_new",
+            &reshape_and_cache_new,
+            "reshape_and_cache_new(Tensor key, Tensor value,"
+            "                  Tensor! key_cache, Tensor! value_cache,"
+            "                  Tensor slot_mapping,"
+            "                  str kv_cache_dtype,"
+            "                  float kv_scale,"
+            "                  float v_scale) -> ()");
 }

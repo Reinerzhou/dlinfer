@@ -16,6 +16,17 @@ from .maca_extension import ops as maca_ext_ops
 from .context_flashattention import (
     context_attention_fwd as context_attention_fwd_mla,
 )
+# from .flash_attn_varlen_func import flash_attn_varlen_forward
+# from .paged_deocde_attention import paged_decode_attention_fwd
+
+
+def dump_tensor(x, name):
+    import pickle
+    with open(f'/home/pujiang/zhousl/for_test/{name}.pkl', 'wb') as f:
+        if isinstance(x, torch.Tensor):
+            pickle.dump(x.cpu(), f)
+        else:
+            pickle.dump(x, f)
 
 
 __all__ = [
@@ -124,8 +135,25 @@ def prefill_attention(
         softmax_scale = float(1 / math.sqrt(key.size(-1)))
 
     is_mla = key.size(-1) != value.size(-1)
+    # if query.device.index == 0:
+    #     import pdb; pdb.set_trace()
 
     if is_mla:
+        # if query.device.index == 0:
+        #     import pdb; pdb.set_trace()
+        # flash_attn_varlen_forward
+        # output = flash_attn_varlen_forward(
+        #     query,
+        #     key,
+        #     value,
+        #     cu_seqlens_q=q_start_loc,
+        #     cu_seqlens_k=q_start_loc,
+        #     max_seqlen_q=max_q_seq_len,
+        #     max_seqlen_k=max_kv_seq_len,
+        #     softmax_scale=softmax_scale,
+        #     causal=causal,
+        # )
+        # return output
         batch_size = kv_seq_len.size(0)
         head_dim = query.shape[-1]
         nope_size = value.shape[-1]
@@ -228,15 +256,30 @@ def paged_decode_attention(
         softmax_scale = float(1 / math.sqrt(query.size(-1)))
 
     num_kv_heads = value_cache.size(1)
-    block_size = value_cache.size(-2)
+    # block_size = value_cache.size(-2)
     output = torch.empty_like(query)
 
     is_mla = query.size(-1) == 576
+    # if query.device.index == 1:
+    #     import pdb; pdb.set_trace()
 
     if is_mla:
         value_cache = key_cache.transpose(2, 3).reshape(
             -1, num_kv_heads, 576, block_size
         )
+    # if query.device.index == 0:
+    #     import pdb; pdb.set_trace()
+    # paged_decode_attention_fwd(
+    #     query,
+    #     value_cache,
+    #     value_cache,
+    #     output,
+    #     block_table,
+    #     kv_seq_len,
+    #     block_size,
+    #     max_kv_seq_len,
+    #     sm_scale=softmax_scale,
+    # )
     maca_ext_ops.paged_attention_v1(
         output,
         query,
@@ -258,7 +301,11 @@ def paged_decode_attention(
         1,  # blocksparse_block_size
         1,  # blocksparse_head_sliding_step
     )
+    
     if is_mla:
+        # res = output[..., :512]
+        # if query.device.index == 0:
+        #     import pdb; pdb.set_trace()
         return output[..., :512]
     else:
         return output
@@ -319,7 +366,7 @@ def paged_prefill_attention(
         )
         return output[..., :512]
 
-    value_cache = value_cache.permute(0, 1, 3, 2)
+    # value_cache = value_cache.permute(0, 1, 3, 2)
     context_attention_fwd(
         query,
         key,
@@ -408,7 +455,9 @@ def fused_moe(
     topk_ids = topk_ids.reshape(N, top_k)
     if renormalize:
         topk_weights = topk_weights / topk_weights.sum(dim=-1, keepdim=True)
-    return vllm.model_executor.layers.fused_moe.fused_experts(
+    from vllm.model_executor.layers.fused_moe.fused_moe import fused_experts
+
+    return fused_experts(
         hidden_states, gate_up_weights, down_weights, topk_weights, topk_ids
     )
 
@@ -419,15 +468,21 @@ def linear(
     weight: Tensor,
     bias: Optional[Tensor],
     all_reduce: Optional[bool],
+    out: Optional[Tensor]=None,
+    async_op: Optional[bool]=False,
 ) -> Tensor:
+    
     if os.getenv("DLINER_LINEAR_USE_NN_LAYOUT", "0") == "1":
-        out = torch.matmul(x, weight)
+        if out is None:
+            out = torch.matmul(x, weight)
+        else:
+            torch.matmul(x, weight, out=out)
         if bias is not None:
             out += bias
     else:
         out = torch.nn.functional.linear(x, weight, bias)
     if all_reduce:
-        dist.all_reduce(out)
+        dist.all_reduce(out, async_op=async_op)
     return out
 
 
